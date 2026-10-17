@@ -1,41 +1,47 @@
 import type { Request, Response, NextFunction } from "express";
-import { type ZodSchema, ZodError } from "zod";
+import { type ZodType, ZodError } from "zod";
 
-const validateBody = (schema: ZodSchema) => {
+type RequestPart = "body" | "query" | "params";
+
+const formatZodError = (error: ZodError) =>
+    error.issues.map((issue) => ({
+        field: issue.path.join('.'),
+        message: issue.message,
+    }));
+
+const validate = (part: RequestPart, schema: ZodType) => {
     return (req: Request, res: Response, next: NextFunction) => {
         try {
-            const validatedData = schema.parse(req.body);
-            req.body = validatedData;
+            const validatedData = schema.parse(req[part]);
+
+            if (part === "query") {
+                // Express 5 exposes req.query as a getter, so it can't be reassigned directly
+                Object.defineProperty(req, "query", {
+                    value: validatedData,
+                    writable: true,
+                    enumerable: true,
+                    configurable: true,
+                });
+            } else {
+                req[part] = validatedData as any;
+            }
+
             next();
         } catch (error) {
-            if(error instanceof ZodError) {
-                const validationErrors = error.issues.map((err) => ({
-                    field: err.path.join('.'),
-                    message: err.message,
-                }));
-                return res.status(400).json({ errors: validationErrors });
+            if (error instanceof ZodError) {
+                res.status(400).json({
+                    error: "Validation failed",
+                    details: formatZodError(error),
+                });
+                return;
             }
             next(error);
         }
-    }
-}
+    };
+};
 
-const validateQuery = (schema: ZodSchema) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-        try {
-            schema.parse(req.query);
-            next();
-        } catch (error) {
-            if(error instanceof ZodError) {
-                const validationErrors = error.issues.map((err) => ({
-                    field: err.path.join('.'),
-                    message: err.message,
-                }));
-                return res.status(400).json({ errors: validationErrors });
-            }
-            next(error);
-        }
-    }
-}
+const validateBody = (schema: ZodType) => validate("body", schema);
+const validateQuery = (schema: ZodType) => validate("query", schema);
+const validateParams = (schema: ZodType) => validate("params", schema);
 
-export { validateBody, validateQuery };
+export { validate, validateBody, validateQuery, validateParams };

@@ -1,11 +1,13 @@
 import { z } from 'zod';
 
 const createStudentBodySchema = z.object({
-  name: z.string().min(3, { message: "Name is required" }),
+  name: z.string().min(3, { message: "Name must be at least 3 characters" }),
 });
 
-const updateStudentQuerySchema = z.object({
-  id: z.string().min(5, { message: "Id is required" }),
+const studentIdParamsSchema = z.object({
+  id: z.string().min(5, { message: "Id must be at least 5 characters" }),
 });
 
-export { createStudentBodySchema, updateStudentQuerySchema };
+const updateStudentBodySchema = createStudentBodySchema;
+
+export { createStudentBodySchema, studentIdParamsSchema, updateStudentBodySchema };
