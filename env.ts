@@ -1,4 +1,5 @@
 import { env as loadEnv } from 'custom-env'
+import { config as loadDotenv } from 'dotenv'
 import { z } from 'zod'
 
 process.env.APP_STAGE = process.env.APP_STAGE || 'dev'
@@ -8,7 +9,7 @@ const isDevelopment = process.env.APP_STAGE === 'dev'
 const isTesting = process.env.APP_STAGE === 'test'
 
 if (isDevelopment) {
-  loadEnv()
+  loadDotenv()
 } else if (isTesting) {
   loadEnv('test')
 }
