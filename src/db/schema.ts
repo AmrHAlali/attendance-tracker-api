@@ -50,3 +50,6 @@ export const students = pgTable('students', {
 //     };
 //   }
 // );
+
+export type Student = typeof students.$inferSelect;
+export type NewStudent = typeof students.$inferInsert;

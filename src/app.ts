@@ -3,6 +3,7 @@ import studentRoutes from "./routes/students/student.routes.ts";
 import morgan from "morgan";
 import helmet from "helmet";
 import healthRoutes from "./routes/health/health.routes.ts";
+import { register } from "./controllers/auth.controller.ts";
 
 const app = express();
 
@@ -15,6 +16,9 @@ app.use(express.urlencoded({ extended: true })); // Parse incoming URL-encoded r
 // Routes:
 app.use('/api/students', studentRoutes);
 app.use('/api/health', healthRoutes);
+
+// TODO : Add authentication routes
+app.post('/api/auth/register', register);
 
 export { app }
 export default app;
